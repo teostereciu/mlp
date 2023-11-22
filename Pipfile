@@ -8,6 +8,10 @@ jupyter = "*"
 numpy = "*"
 pandas = "*"
 pillow = "*"
+ipykernel = "*"
+matplotlib = "*"
+opencv-python = "*"
+seaborn = "*"
 
 [dev-packages]
 
