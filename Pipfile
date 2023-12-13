@@ -12,6 +12,7 @@ ipykernel = "*"
 matplotlib = "*"
 opencv-python = "*"
 seaborn = "*"
+keras = "*"
 
 [dev-packages]
 
