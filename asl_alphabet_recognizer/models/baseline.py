@@ -31,16 +31,11 @@ def show_confusion_matrix(clf, y_test, y_pred):
 data_handler = DataHandler(data_dir)
 (data_handler.unzip()
  .create_filename_dataframe()
- .sample(n=10)
+ .sample(n=100)
  .process()
  .apply_canny())
 
 df_train, df_test = data_handler.get_dfs()
-
-if debug:
-    data_handler.show_before_and_after()
-    print(df_train.head())
-    print(df_train.shape)
 
 X_train = np.array(df_train['X_canny'].tolist())
 y_train = np.array(df_train['category'].tolist())
@@ -48,7 +43,19 @@ X_test = np.array(df_test['X_canny'].tolist())
 y_test = np.array(df_test['category'].tolist())
 
 X_train_flat = X_train.reshape(len(X_train), -1)
-X_test_flat = X_train.reshape(len(X_test), -1)
+X_test_flat = X_test.reshape(len(X_test), -1)
+
+if debug:
+    data_handler.show_before_and_after()
+    print(df_train.head())
+    print(df_train.shape)
+    print(df_test.shape)
+    print("X_train: ", X_train.shape)
+    print("y_train: ", y_train.shape)
+    print("X_test: ", X_test.shape)
+    print("y_test: ", y_test.shape)
+    print("X_train_flat: ", X_train_flat.shape)
+    print("X_test_flat: ", X_test_flat.shape)
 
 # create and train baseline model
 
