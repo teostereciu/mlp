@@ -105,7 +105,7 @@ Your repository should look something like this:
 ├───data  # Stores .csv
 ├───models  # Stores .pkl
 ├───notebooks  # Contains experimental .ipynbs
-├───project_name
+├───asl_alphabet_recognizer
 │   ├───data  # For data processing, not storing .csv
 │   ├───features
 │   └───models  # For model creation, not storing .pkl
