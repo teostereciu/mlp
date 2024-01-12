@@ -64,7 +64,7 @@ class DataHandler:
     Handle the image dataset.
     """
     # map alphabet to numbers
-    categories = {i: letter for i, letter in enumerate(string.ascii_uppercase) if letter not in {'J', 'Z'}}
+    categories = {i: letter for i, letter in enumerate(char for char in string.ascii_uppercase if char not in {'J', 'Z'})}
 
     def __init__(self, data_dir):
         """
