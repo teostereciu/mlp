@@ -31,12 +31,21 @@ def show_confusion_matrix(clf, y_test, y_pred):
 data_handler = DataHandler(data_dir)
 (data_handler.unzip()
  .create_filename_dataframe()
- .sample(n=100)
+ .sample(n=10)
  .process()
  .apply_canny())
 
 df_train, df_test = data_handler.get_dfs()
+data_handler.save_dfs()
+df_train_saved, df_test_saved = data_handler.load_dfs()
 
+print(df_train)
+print(df_train.shape)
+print(df_train_saved)
+print(df_train_saved['X_canny'])
+print(df_train_saved.shape)
+
+'''
 X_train = np.array(df_train['X_canny'].tolist())
 y_train = np.array(df_train['category'].tolist())
 X_test = np.array(df_test['X_canny'].tolist())
@@ -74,4 +83,4 @@ print(f"Test Accuracy: {accuracy:.2%}")
 show_confusion_matrix(clf, y_test, y_pred)
 
 report = classification_report(y_test, y_pred)
-print(report)
+print(report)'''

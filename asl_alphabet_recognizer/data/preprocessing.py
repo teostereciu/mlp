@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -46,22 +48,33 @@ def unzip_if_not_exists(zip_file_path, extract_to_path):
         print(f"The directory {extract_to_path} already exists. Skipped unzipping.")
 
 
+def extract_float_arr(string_repr):
+    values = re.findall(r'\d+\.\d+', string_repr)
+    return np.array(values, dtype=float)
+
+
+def extract_bool_arr(string_repr):
+    values = re.findall(r'True|False', string_repr)
+    bool_array = np.array(values == 'True', dtype=bool)
+    num_columns = bool_array.size // bool_array.tolist().count(True) if bool_array.tolist().count(True) > 0 else 1
+    return bool_array.reshape((-1, num_columns))
+
 class DataHandler:
     """
     Handle the image dataset.
     """
     # map alphabet to numbers
     categories = {i: letter for i, letter in enumerate(string.ascii_uppercase) if letter not in {'J', 'Z'}}
-    df = None
-    n = 0
-    df_train = None
-    df_test = None
 
     def __init__(self, data_dir):
         """
         Initialize data handler.
         :param data_dir: where to find the data to be handled
         """
+        self.df = None
+        self.n = 0
+        self.df_train = None
+        self.df_test = None
         self.data_dir = data_dir
         self.train_path = os.path.join(data_dir, "asl_train", "asl_alphabet_train")
 
@@ -133,14 +146,37 @@ class DataHandler:
         return self.df_train, self.df_test
 
     def save_dfs(self):
-        # todo: save to csv?
-        pass
+        """
+        Save preprocessed train and test sets to memory as csv files.
+        """
+        train_path = os.path.join(self.data_dir, "train.csv")
+        test_path = os.path.join(self.data_dir, "test.csv")
+        self.df_train.to_csv(train_path, index=False, columns=['filename', 'category', 'X', 'X_canny'])
+        self.df_test.to_csv(test_path, index=False, columns=['filename', 'category', 'X', 'X_canny'])
+
+    def load_dfs(self, update_self=False):
+        """
+        Load preprocessed train and test sets from memory.
+        :param update_self: whether to set the handler's train and test sets with the load
+        :return df_train, df_test: the dataframes
+        """
+        train_path = os.path.join(self.data_dir, "train.csv")
+        test_path = os.path.join(self.data_dir, "test.csv")
+        df_train = pd.read_csv(train_path)
+        df_test = pd.read_csv(test_path)
+        df_train['X'] = df_train['X'].apply(extract_float_arr)
+        df_test['X'] = df_test['X'].apply(extract_float_arr)
+        df_train['X_canny'] = df_train['X_canny'].apply(extract_bool_arr)
+        df_test['X_canny'] = df_test['X_canny'].apply(extract_bool_arr)
+        if update_self:
+            self.df_train = df_train
+            self.df_test = df_test
+        return df_train, df_test
 
     def show_before_and_after(self, idx=11):
         """
         Plot an example before and after processing image.
         :param idx:
-        :return:
         """
         plt.subplot(1, 2, 1)
         plt.imshow(self.df_train.iloc[idx]['X'], cmap='gray')
