@@ -1,6 +1,7 @@
 import io
 import os
 import string
+from pathlib import Path
 
 from keras.models import load_model
 import PIL
@@ -11,25 +12,16 @@ from pydantic import BaseModel
 from PIL import Image
 
 
-from config.settings import models_dir
-
-
 class Prediction(BaseModel):
     """
-    Predictions are JSON strings.
-
-    For example,
-    ```
-    {"prediction":"U"}
-    ```
+    Predictions are strings.
     """
     prediction: str
 
 
-#MODEL_PATH = os.path.join(models_dir, 'cnn')
-MODEL_PATH = '/Users/teodorastereciu/PycharmProjects/mlp/models/final_model.h5'
+BASE_DIR = Path(__file__).resolve(strict=True).parent
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'final_model.h5')
 
-#model = tf.saved_model.load(MODEL_PATH)
 model = load_model(MODEL_PATH)
 
 app = FastAPI(
@@ -56,11 +48,13 @@ def process_image(image: UploadFile):
     - `np.ndarray`: The processed image array.
 
     Raises:
-    - `HTTPException 415`: If the image cannot be identified or loaded.
+    - `HTTPException 415`: If the image cannot be identified, loaded, or has insufficient dimensions.
     """
     try:
         image_data = image.file.read()
         image = Image.open(io.BytesIO(image_data))
+        if image.width < 200 or image.height < 200:
+            raise HTTPException(status_code=415, detail="Image dimensions should be at least (200, 200)")
         gray = image.convert('L')
         resized = gray.resize((200, 200))
         image_arr = np.array(resized)
