@@ -4,8 +4,7 @@ from pathlib import Path
 from keras.models import load_model
 import streamlit as st
 import string
-import random
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
 
 import warnings
@@ -16,8 +15,8 @@ warnings.filterwarnings("ignore")
 # such as the page title, logo-icon, page loading state
 # (whether the page is loaded automatically or you need to perform some action for loading)
 st.set_page_config(
-    page_title="Mango Leaf Disease Detection",
-    page_icon=":mango:",
+    #page_title="Mango Leaf Disease Detection",
+    #page_icon=":mango:",
     initial_sidebar_state='auto'
 )
 
@@ -51,7 +50,10 @@ st.write("""
          """
          )
 
-file = st.file_uploader("", type=["jpg", "png"])
+
+@st.cache_data
+def keras_predict(input, _model):
+    return model.predict(input)
 
 
 def import_and_predict(image, model):
@@ -60,7 +62,7 @@ def import_and_predict(image, model):
     image_arr = np.array(resized)
     normalized = image_arr / 255.0
     ready = normalized.reshape((1, *normalized.shape))
-    return model.predict(ready)
+    return keras_predict(ready, model)
 
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent
@@ -75,11 +77,44 @@ def load_keras_model():
 with st.spinner('Model is being loaded..'):
     model = load_keras_model()
 
+if 'uploader_disabled' not in st.session_state:
+    st.session_state.uploader_disabled = False
+if 'camera_disabled' not in st.session_state:
+    st.session_state.camera_disabled = False
+
+
+def update_uploader():
+    st.session_state.uploader_disabled = not st.session_state.uploader_disabled
+
+
+def update_camera():
+    st.session_state.camera_disabled = not st.session_state.camera_disabled
+
+
+file = st.file_uploader("", type=["jpg", "png"],
+                        on_change=update_camera,
+                        disabled=st.session_state.uploader_disabled)
+
 if file is None:
     st.text("Please upload an image file")
 else:
+    st.session_state.camera_disabled = True
     image = Image.open(file)
     st.image(image, use_column_width=True)
     prediction = import_and_predict(image, model)
     if prediction is not None:
-        st.sidebar.write(prediction_label(prediction))
+        st.balloons()
+        st.sidebar.write(f"## {prediction_label(prediction)}")
+
+picture = st.camera_input("Or.. take a picture!",
+                          on_change=update_uploader,
+                          disabled=st.session_state.camera_disabled)
+
+if picture is not None:
+    # st.session_state.uploader_disabled = True
+    st.image(picture, use_column_width=True)
+    image = Image.open(picture)
+    prediction = import_and_predict(image, model)
+    if prediction is not None:
+        st.balloons()
+        st.sidebar.write(f"## {prediction_label(prediction)}")
